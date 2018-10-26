@@ -87,13 +87,33 @@ void writeFileWithLength(char* writeLocation, char* &fileString, long long strin
 
     fclose(fptr);
     printf("File has been written to %s\n", writeLocation);
-    free (fileString);  // Must be freed.
+    free (fileString);  // Must be freed.  REMEMBER!!
 }
 
+// This function allocates an array and fills it with the binary value of the array.
+void intToBinary(int n, bool* binArray, int bitSize) {
+    // Create array.
+    binArray = (bool*) malloc( bitSize * sizeof(bool) );
 
-/*8�%@
-�*/
+    // Assign values
+    int i = 1;
+	while( (bitSize-i) >= 0 ) {
+        binArray[bitSize - i] = (n % 2);
+        n = n / 2;
+        i++;
+    }
+}
 
-/*8ÿ%@
-ÿ9	*/
+// This function converts 8 bits into a character value.  Offset is to take
+// 8 bits from further along the array.
+unsigned char byteToChar(bool* &b, int offset) {
+    unsigned char c = 0;
+    for (int i=0+offset; i < 8+offset; ++i) {
+        if (b[i] == 1) {
+            c |= 1 << i;
+        }
+    }
+    return c;
+}
+
 #endif //!UTIL

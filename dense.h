@@ -8,4 +8,4 @@
 
 int dense(char*, char*, char);  // Constructor function prototype.
 
-#endif //!SIMPLE
+#endif //!DENSE

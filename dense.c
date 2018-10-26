@@ -1,16 +1,11 @@
 #include "dense.h"
 
+/// DESCRIPTION:
 /// Width and height are at the start of the file (header) and are separated by
 /// commmas.  All other information is stored as single unsigned characters.
 
-//#ifndef STB_IMAGE_IMPLEMENTATION
-//#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"  // For reading images
-//#endif
-
-//#ifndef STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
-//#endif
 
 // This macro gets the length of a positive number (including zero).
 #define getNumberLen(num) ( ((int)num<=0) ? 1 : (floor(log10(abs((int)num)))+1) )
@@ -30,7 +25,6 @@ int dense(char* inputFilepath, char* outputFilepath, char operation) {
     return 0; // This means good.
 }
 
-//TODO: fix this function.
 void denseCompress(char* inputFilepath, char* outputFilepath) {
     // Load the image.
     int width=0, height=0, bpp=0;
@@ -64,7 +58,6 @@ void denseCompress(char* inputFilepath, char* outputFilepath) {
     writeFileWithLength(outputFilepath, outPtr, outFileStringLength);  // Write to the output filepath.  // WARNING: will overwrite file.
 }
 
-//TODO: this.
 void denseDecompress(char* inputFilepath, char* outputFilepath) {
     FILE* fptr = fopen(inputFilepath, "rb+");
 
@@ -107,17 +100,11 @@ void denseDecompress(char* inputFilepath, char* outputFilepath) {
     int height = atoi(chHeight);
     int width = atoi(chWidth);
 
-    printf("Height: %i width: %i\n", height, width);
-
     // Allocate space to the array that will contain the pixel values.
     rgb_image = (unsigned char*) malloc(height*width*4);
 
-    printf("Position ptr: %i\n", ftell(fptr));
-
     // Seek to begining of data.
     fseek(fptr, getNumberLen(height)+getNumberLen(width)+2, SEEK_SET);
-
-    printf("Position ptr: %i\n", ftell(fptr));
 
     // Read all data characters in the file.
     unsigned char currentByte[1];
@@ -129,19 +116,12 @@ void denseDecompress(char* inputFilepath, char* outputFilepath) {
 
         index++;  // Go to next char.
         if(index < 200) {
-        //if ((index % 4 == 0) && index < 1000) {
-            printf("index %i\n", index);  // This is a magic statement.  If this si not here, it doesn't work right.
+            printf("#245.517: %i\n", index);  // This is a magic statement.  If this is not here, it doesn't work right.  Or at least, it used to.
             //printf("%i:%i |", (unsigned char) currentByte[0], ftell(fptr));
             fseek(fptr, getNumberLen(height)+getNumberLen(width)+2+index, SEEK_SET);  // Seek to next char  // ftell(fptr);
-            printf("%i : %i |", fgetc(fptr), ftell(fptr));
+            //printf("%i : %i |", fgetc(fptr), ftell(fptr));
         }
-
     }
-
-    printf("cb: %i ", (unsigned char) currentByte[0]);
-
-    //printf("\n\n%i\n", ch);
-    printf("err value: %i\n", ferror(fptr));
 
     fclose(fptr);  // Stop reading file.
 

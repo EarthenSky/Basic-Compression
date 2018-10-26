@@ -1,5 +1,6 @@
 #include "simple.h"
 
+/// DESCRIPTION:
 /// This compression method is a baseline.  It is probably the worst you could
 /// do if you actually tried.
 /// This method breaks each individual pixel up into it's four components and

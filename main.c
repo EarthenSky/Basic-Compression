@@ -1,4 +1,4 @@
-// g++ main.c util.h simple.c simple.h dense.c dense.h stb_image.h stb_image_write.h -o comp.exe
+// g++ main.c util.h simple.c simple.h dense.c dense.h stb_image.h cast.c cast.h stb_image_write.h -o comp.exe
 // comp simple -c C:/images/forest.png C:/images/forest.simple
 // comp dense -d C:/images/forest.dense C:/images/forest6.png
 // g++ main.c util.h simple.c simple.h dense.c dense.h stb_image.h stb_image_write.h -o comp.exe -Wall
@@ -6,29 +6,18 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "util.h"  // Utility functions.
 
-//#ifndef STB_IMAGE_IMPLEMENTATION
-//#define STB_IMAGE_IMPLEMENTATION
-//#include "stb_image.h"  // For reading images
-//#endif
+// Utility functions.
+#include "util.h"  //TODO: this should be a c file and a header, not just a header.
 
-//#ifndef STB_IMAGE_WRITE_IMPLEMENTATION
-//#define STB_IMAGE_WRITE_IMPLEMENTATION
-//#include "stb_image_write.h"
-//#endif
-
-#include "simple.h"  // include the simple compression type.
+// Include compression types.
+#include "simple.h"
 #include "dense.h"
+#include "cast.h"
 
 void printHelp( void );
 
 int main(int argc, char *argv[]) {
-    //printf("All Arguments:\n");
-    //for (int i=0; i<argc; i++) {
-    //    printf("\t%i: %s\n", i, argv[i]);
-    //}
-
     // Check if user needs the help page.
     if (strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0 || strcmp(argv[1], "--info")==0) {
         printHelp();
@@ -36,8 +25,11 @@ int main(int argc, char *argv[]) {
     } else if(strcmp(argv[1], "simple")==0) {  // Case: compress the simple file type.
         sendArgs(simple, argc, argv);  // Send the arguments (formatted) to the simple algorithm.
         return 0;  // Exit program.
-    } else if(strcmp(argv[1], "dense")==0) {  // Case: compress the simple file type.
-        sendArgs(dense, argc, argv);  // Send the arguments (formatted) to the simple algorithm.
+    } else if(strcmp(argv[1], "dense")==0) {  // Case: compress the dense file type.
+        sendArgs(dense, argc, argv);  // Send the arguments (formatted) to the dense algorithm.
+        return 0;  // Exit program.
+    } else if(strcmp(argv[1], "cast")==0) {  // Case: compress the cast file type.
+        sendArgs(cast, argc, argv);  // Send the arguments (formatted) to the cast algorithm.
         return 0;  // Exit program.
     }
 

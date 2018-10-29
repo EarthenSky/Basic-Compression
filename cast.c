@@ -39,8 +39,6 @@ void castCompress(char* inputFilepath, char* outputFilepath) {
 
     // Find header size.
     int headerSize = (int)getNumberLen(height)+(int)getNumberLen(width)+2;
-    //char header[headerSize+1];
-    //sprintf(header, "%i,%i,", height, width);
 
     // This array contains the binary contents of the file.
     long long filePosition = 0;
@@ -103,6 +101,8 @@ void castCompress(char* inputFilepath, char* outputFilepath) {
         }
     }
 
+    printf("%i\n", rgb_image[0]);
+
     // Allocate string.
     char* outFileString = (char*) malloc( (fileSizeBinary/8)*sizeof(char)+headerSize );
     sprintf(outFileString, "%i,%i,", height, width);  // Add the header to the string.
@@ -120,7 +120,6 @@ void castCompress(char* inputFilepath, char* outputFilepath) {
             }
 
             outFileString[(i/8) + headerSize] = byteToChar(lastByte, 0);
-
             free(lastByte);
         }
         else {
@@ -136,7 +135,6 @@ void castCompress(char* inputFilepath, char* outputFilepath) {
     writeFileWithLength(outputFilepath, outFileString, (fileSizeBinary/8)*sizeof(char)+headerSize);  // Write to the output filepath.  // WARNING: will overwrite file.
 }
 
-// TODO: this
 void castDecompress(char* inputFilepath, char* outputFilepath) {
     FILE* fptr = fopen(inputFilepath, "rb+");  // Read file in byte mode.
 
@@ -185,48 +183,138 @@ void castDecompress(char* inputFilepath, char* outputFilepath) {
     // Seek to begining of data.
     fseek(fptr, getNumberLen(height)+getNumberLen(width)+2, SEEK_SET);
 
-    int extraBinaryLen=0;  // This number is how many binary characters as useful.
-    bool extraBinary[8];  // This array holds the binary characters.
+    int storageLen=0;  // This number is how many binary characters are useful.
+    bool binaryStorage[8];  // This array holds the saved binary characters.
     bool currentByte[8];
 
-    unsigned char currentByte[1];
+    int lastNumber=0;
 
+    index = -1;
     // Read the entire file in binary sections.
-    while(index < ((width-1)*6+7)*height*4) {
-        fseek(fptr, getNumberLen(height)+getNumberLen(width)+2+index, SEEK_SET);  // Seek to next char  // ftell(fptr);
-        if( (index % width) == 0 ) {  // Case: take 7 bits.
-            bool usefulBits[7];  // This holds the actual pixel value retrived.
+    while(index < width*height*4/*((width-1)*6+7)*height*4*/) {
+        //fseek(fptr, getNumberLen(height)+getNumberLen(width)+2+index, SEEK_SET);  // Seek to next char  // ftell(fptr);
 
-            intToBinary(fgetc(fptr), currentByte, 8);  // Grab 8 bits.
+        unsigned char channelValue=0;  // This is the obtained value.
 
-            // Take the saved numbers from extraBinary.
-            int index = 0;
-            while (extraBinaryLen > 0) {
-                usefulBits[index] = extraBinary[index];
+        if( ((index+1) % width) == 0 ) {  // Case: take 7 bits from file.
+            int bitsFilled = 1;
+            bool usefulBits[8] = {0,0,0,0,0,0,0,0};  // This holds the actual pixel value retrived.
 
-                extraBinaryLen--; index++;
+            // Take the saved numbers from binaryStorage.
+            while (storageLen > 0) {
+                usefulBits[bitsFilled] = binaryStorage[storageLen-1];  // TODO: how should extraBinary get filled / emptied?
+                storageLen--; bitsFilled++;
             }
 
-            // Put the new numbers into usefulBits.
+            if(bitsFilled == 8) {  // Case: useful bits is full.
+                // process number. -> // do nothing.
 
-            // Put the leftover numbers in extraBinary.
+            } else {  // Case: binaryStorage[8] is empty.
+                int currentByteLen = 8;
+                index++;
+                fseek(fptr, getNumberLen(height)+getNumberLen(width)+2+index, SEEK_SET);
+                intToBinary((int)fgetc(fptr), currentByte, 8);  // Grab 8 bits.
 
-        } else {  // Case: take 1 and 5 bits.
+                // Put currentByte into usefulBits.
+                while (bitsFilled < 8) {
+                    usefulBits[bitsFilled] = currentByte[8-currentByteLen];
+                    bitsFilled++; currentByteLen--;
+                    if(index == 0) {
+                        printf("%i\n", currentByte[8-currentByteLen]);
+                    }
+                }
+
+                if (index == 0) {
+                    printf("%i", usefulBits[0]); printf("%i", usefulBits[1]);
+                    printf("%i", usefulBits[2]); printf("%i", usefulBits[3]);
+                    printf("%i", usefulBits[4]); printf("%i", usefulBits[5]);
+                    printf("%i", usefulBits[6]); printf("%i", usefulBits[7]);
+                    printf("\n");
+                }
+
+                // Put the leftover currentByte values into extraBinary.
+                int tmp = currentByteLen;
+                while(currentByteLen > 0) {
+                    binaryStorage[tmp-storageLen] = currentByte[8-currentByteLen];
+                    currentByteLen--; storageLen++;
+                }
+            }
+
+            // Get channel value, then convert to 8-bits.
+            bool* bitPtr = usefulBits;
+
+            if (index == 0) {
+                printf("%i\n", byteToChar(bitPtr, 0));
+                printf("||%i||\n", ftell(fptr));
+            }
+
+            channelValue = 2*byteToChar(bitPtr, 0);
+        }
+        else {  // Case: take 6 bits from file.
+            int bitsFilled = 2;
             bool sign;
-            bool usefulByte[5];  // This holds the actual pixel value retrived.
+            bool usefulBits[8] = {0,0,0,0,0,0,0,0};  // This holds the actual pixel value retrived.
 
+            // Take the saved numbers from binaryStorage.
+            while (storageLen > 0) {
+                if (bitsFilled == 2) {
+                    sign = binaryStorage[storageLen-1];
+                    storageLen--; bitsFilled++;
+                } else {
+                    usefulBits[bitsFilled] = binaryStorage[storageLen-1];  // TODO: how should extraBinary get filled / emptied?
+                    storageLen--; bitsFilled++;
+                }
+            }
+
+            if(bitsFilled == 8) {  // Case: useful bits is full.
+                // process number. -> // do nothing.
+
+            } else {  // Case: binaryStorage[8] is empty.
+                int currentByteLen = 8;
+                index++;
+                fseek(fptr, getNumberLen(height)+getNumberLen(width)+2+index, SEEK_SET);
+                intToBinary(fgetc(fptr), currentByte, 8);  // Grab 8 bits.
+
+                // Put currentByte into usefulBits.
+                while (bitsFilled < 8) {
+                    if (bitsFilled == 2) {
+                        sign = currentByte[8-currentByteLen];
+                        bitsFilled++; currentByteLen--;
+                    } else {
+                        usefulBits[bitsFilled] = currentByte[8-currentByteLen];
+                        bitsFilled++; currentByteLen--;
+                    }
+                }
+
+                // Put the leftover currentByte values into extraBinary.
+                int tmp = currentByteLen;
+                while(currentByteLen > 0) {
+                    binaryStorage[tmp-storageLen] = currentByte[8-currentByteLen];
+                    currentByteLen--; storageLen++;
+                }
+            }
+
+            // Get offset value, convert to channel value, convert to 8-bits.
+            bool* bitPtr = usefulBits;
+            channelValue = 2*( ((sign==0) ? 1 : -1)*byteToChar(bitPtr, 0) + lastNumber);
         }
 
-        // Cut the binary from the array at the right anmounts and convert to number.
+        if (index == 0)
+            printf("%i\n", channelValue);
 
-        // Convert number from step / 7-bits into an 8-bit pixel value.
+        lastNumber = channelValue;
+
+        long long filePosition = (index / width*height);
+        rgb_image[filePosition] = (unsigned char) channelValue;
+        //printf("%i|", filePosition);
 
         // Add the pixel value at the correct position in the file (r, g, b then a)
         //rgb_image[index] = fgetc(fptr);
 
-        index++;  // Go to next 8-bits.
+        //index++;  // Go to next channel value.
     }
 
+    free(currentByte);
     fclose(fptr);  // Stop reading file.
 
     stbi_write_png(outputFilepath, width, height, 4, rgb_image, width*4);

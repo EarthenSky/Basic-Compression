@@ -92,6 +92,8 @@ void writeFileWithLength(char* writeLocation, char* &fileString, long long strin
 
 // This function allocates an array and fills it with the binary value of the array.
 void intToBinary(int n, bool* binArray, int bitSize) {
+    free(binArray);
+
     // Create array.
     binArray = (bool*) malloc( bitSize * sizeof(bool) );
 

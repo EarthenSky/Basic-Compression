@@ -92,10 +92,10 @@ void writeFileWithLength(char* writeLocation, char* &fileString, long long strin
 
 // This function allocates an array and fills it with the binary value of the array.
 void intToBinary(int n, bool* binArray, int bitSize) {
-    free(binArray);
+    //free(binArray);
 
     // Create array.
-    binArray = (bool*) malloc( bitSize * sizeof(bool) );
+    //binArray = (bool*) malloc( bitSize * sizeof(bool) );
 
     // Assign values
     int i = 1;
@@ -112,6 +112,26 @@ unsigned char byteToChar(bool* &b, int offset) {
     unsigned char c = 0;
     for (int i=0+offset; i < 8+offset; ++i) {
         if (b[i] == 1) {
+            c |= 1 << i;
+        }
+    }
+    return c;
+}
+
+// This function converts 8 bits into a character value.  Offset is to take
+// 8 bits from further along the array.  //TODO: this is backwards...
+unsigned char byteToCharBack(bool* &b, int offset) {
+    unsigned char c = 0;
+    bool back[8]={};
+
+    int j = 7;
+    for (int i=0+offset; i < 8+offset; ++i) {
+        back[j] = b[i];
+        j--;
+    }
+
+    for (int i=0; i<8; ++i) {
+        if (back[i] == 1) {
             c |= 1 << i;
         }
     }

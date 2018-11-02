@@ -1,6 +1,7 @@
 // g++ main.c util.h simple.c simple.h dense.c dense.h stb_image.h cast.c cast.h stb_image_write.h -o comp.exe
 // comp simple -c C:/images/forest.png C:/images/forest.simple
 // comp dense -d C:/images/forest.dense C:/images/forest6.png
+// comp cast -d C:/images/largeImage.cast C:/images/largeImagecast.png
 // g++ main.c util.h simple.c simple.h dense.c dense.h stb_image.h stb_image_write.h -o comp.exe -Wall
 // -Wall is a life saver!
 
@@ -18,6 +19,11 @@
 void printHelp( void );
 
 int main(int argc, char *argv[]) {
+    //bool* binaryValue = (bool*) malloc( 7 * sizeof(bool) );
+    //intToBinary(75, binaryValue, 7);
+    //printf("( %i )\n", binaryValue[0]);
+    //free(binaryValue);
+
     // Check if user needs the help page.
     if (strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0 || strcmp(argv[1], "--info")==0) {
         printHelp();

@@ -107,7 +107,7 @@ void denseDecompress(char* inputFilepath, char* outputFilepath) {
     fseek(fptr, getNumberLen(height)+getNumberLen(width)+2, SEEK_SET);
 
     // Read all data characters in the file.
-    unsigned char currentByte[1];
+    //unsigned char currentByte[1];
     while(index < height*width*4) {
         fseek(fptr, getNumberLen(height)+getNumberLen(width)+2+index, SEEK_SET);  // Seek to next char  // ftell(fptr);
         //fread(currentByte, 1, 1, fptr);  // read one byte.

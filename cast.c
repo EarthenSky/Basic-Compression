@@ -87,6 +87,10 @@ void castCompress(char* inputFilepath, char* outputFilepath) {
                 fileBinary[filePosition+6] = binaryValue[6];
                 filePosition+=7;
 
+                if (index < 20 && offset == 0) {
+                    printf("head: %i\n", headValue);
+                }
+
                 free(binaryValue);  // deallocate memory when done.
             }
             else {  // Case: another char in row. (6bit)
@@ -114,6 +118,10 @@ void castCompress(char* inputFilepath, char* outputFilepath) {
                 fileBinary[filePosition+4] = binaryValue[3];
                 fileBinary[filePosition+5] = binaryValue[4];
                 filePosition+=6;
+
+                if (index < 20 && offset == 0) {
+                    printf("head: %i\n", headValue);
+                }
 
                 free(binaryValue);
             }
@@ -170,7 +178,7 @@ void castCompress(char* inputFilepath, char* outputFilepath) {
 }
 
 //////////////////////////////////////////////
-// TODO: check the end line flip code.
+// TODO: check the 5th pixel discrepency and why it changes by zero.
 //////////////////////////////////////////////
 
 void castDecompress(char* inputFilepath, char* outputFilepath) {
@@ -180,7 +188,7 @@ void castDecompress(char* inputFilepath, char* outputFilepath) {
         printf("Error: failed to read file.\n"); return;
     }
 
-    unsigned char* rgb_image;  // Init the array of pixel values.
+    unsigned char* rgb_image;  // Declare the array of pixel values.
 
     // Height and Width grabbers.  "NO MONSTER IMAGE SIZES!"
     char chHeight[128];
@@ -240,7 +248,7 @@ void castDecompress(char* inputFilepath, char* outputFilepath) {
 
             // Take the saved numbers from binaryStorage.
             int initStorageLen = storageLen;
-            while (storageLen > 0) {
+            while (storageLen > 0 && bitsFilled < 8) {
                 usefulBits[bitsFilled] = binaryStorage[initStorageLen-(storageLen-1)];  // TODO: how should extraBinary get filled / emptied?
                 storageLen--; bitsFilled++;
             }
@@ -281,7 +289,7 @@ void castDecompress(char* inputFilepath, char* outputFilepath) {
             channelValue = 2*byteToCharBack(bitPtr, 0);
 
             if (index < 20) {
-                printf("#%i\n", channelValue);
+                printf("#%i", channelValue/2);
                 printf("|%i|\n", ftell(fptr));
             }
         }
@@ -290,15 +298,23 @@ void castDecompress(char* inputFilepath, char* outputFilepath) {
             bool sign = 0;
             bool usefulBits[8] = {0,0,0,0,0,0,0,0};  // This holds the actual pixel value retrived.
 
+            if (index+1 <= 5) {
+                printf("bitsFilled: %i\n", bitsFilled);
+            }
+
             // Take the saved numbers from binaryStorage.
             int initStorageLen = storageLen-1;
-            while (storageLen > 0) {
+            while (storageLen > 0 && bitsFilled < 8) {
                 if (bitsFilled == 2) {
                     sign = binaryStorage[initStorageLen-(storageLen-1)];
                 } else {
                     usefulBits[bitsFilled] = binaryStorage[initStorageLen-(storageLen-1)];  // TODO: how should extraBinary get filled / emptied?
                 }
                 storageLen--; bitsFilled++;
+            }
+
+            if (index+1 <= 8) {
+                printf("bitsFilled: %i\n", bitsFilled);
             }
 
             if(bitsFilled == 8) {  // Case: useful bits is full.
@@ -314,22 +330,20 @@ void castDecompress(char* inputFilepath, char* outputFilepath) {
                 while (bitsFilled < 8) {
                     if (bitsFilled == 2) {
                         sign = currentByte[8-currentByteLen];
-                        bitsFilled++; currentByteLen--;
                     } else {
                         usefulBits[bitsFilled] = currentByte[8-currentByteLen];
-                        bitsFilled++; currentByteLen--;
                     }
+                    bitsFilled++; currentByteLen--;
                 }
 
-                /*
-                if (index == 2) {
+                if (index == 5) {
                     printf("sign: %i\n", sign);
                     printf("%i", usefulBits[0]); printf("%i", usefulBits[1]);
                     printf("%i", usefulBits[2]); printf("%i", usefulBits[3]);
                     printf("%i", usefulBits[4]); printf("%i", usefulBits[5]);
                     printf("%i", usefulBits[6]); printf("%i", usefulBits[7]);
                     printf("\n");
-                }*/
+                }
 
                 // Put the leftover currentByte values into extraBinary.
                 int tmp = currentByteLen;
@@ -338,11 +352,8 @@ void castDecompress(char* inputFilepath, char* outputFilepath) {
                     currentByteLen--; storageLen++;
                 }
 
-                if (index == 1) {
-                    printf("storageSize: %i\n", storageLen);
-                    //printf("storage: %i\n", binaryStorage[0]);
-                    //printf("storage: %i\n", binaryStorage[1]);
-                    //printf("storage: %i\n", binaryStorage[2]);
+                if (index <= 8) {
+                    printf("StorageLen: %i\n", storageLen);
                 }
             }
 
@@ -351,7 +362,7 @@ void castDecompress(char* inputFilepath, char* outputFilepath) {
             channelValue = 2*( ((sign==0) ? 1 : -1)*byteToCharBack(bitPtr, 0) + (lastNumber/2));
 
             if (index < 20) {
-                printf("%i", channelValue);
+                printf("%i", channelValue/2);
                 printf("|%i|\n", ftell(fptr));
             }
         }
@@ -370,10 +381,6 @@ void castDecompress(char* inputFilepath, char* outputFilepath) {
             //printf("pos : %i\n", filePosition);
         }
         //printf("%i|", filePosition);
-
-        // Add the pixel value at the correct position in the file (r, g, b then a)
-        //rgb_image[index] = fgetc(fptr);
-
         //index++;  // Go to next channel value.
     }
 
@@ -384,7 +391,6 @@ void castDecompress(char* inputFilepath, char* outputFilepath) {
     printf("write?\n");
 
     stbi_write_png(outputFilepath, width, height, 4, rgb_image, width*4);
-    printf("second red: %i\n", rgb_image[4]);
     printf("File has been written to %s\n", outputFilepath);
 
     free(rgb_image);
